@@ -57,7 +57,7 @@ const ListProduct = () => {
               >
                 <img
                   src={product.image}
-                  alt=""
+                  alt="product"
                   className="listproduct-product-icon"
                 />
                 <p>{product.name}</p>
@@ -70,7 +70,7 @@ const ListProduct = () => {
                   }}
                   className="listproduct-remove-icon"
                   src={cross_icon}
-                  alt=""
+                  alt="Remove"
                 />
               </div>
               <hr />

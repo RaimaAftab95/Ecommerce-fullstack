@@ -122,7 +122,7 @@ const AddProduct = () => {
           <img
             src={image ? URL.createObjectURL(image) : upload_area}
             className="addproduct-thumnail-img"
-            alt=""
+            alt="image"
           />
         </label>
         <input
