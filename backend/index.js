@@ -27,6 +27,10 @@ app.get("/", (req, res) => {
 
 // Image Storage Engine
 
+const uploadDir = "./upload/images";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 const storage = multer.diskStorage({
   destination: "./upload/images",
   filename: (req, file, cb) => {
@@ -36,11 +40,6 @@ const storage = multer.diskStorage({
     );
   },
 });
-
-const uploadDir = "./upload/images";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
 
 const upload = multer({ storage: storage });
 
@@ -64,6 +63,10 @@ const upload = multer({ storage: storage });
 // Remove the temporary file from local storage
 app.post("/upload", upload.single("product"), async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({ success: 0, message: "No file uploaded" });
+    }
+
     const filePath = req.file.path;
 
     const result = await cloudinary.uploader.upload(filePath, {
