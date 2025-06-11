@@ -6,6 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const AddProduct = () => {
   const [image, setImage] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [productDetails, setProductDetails] = useState({
     name: "",
     image: "",
@@ -22,47 +23,109 @@ const AddProduct = () => {
   const changeHandler = (e) => {
     setProductDetails({ ...productDetails, [e.target.name]: e.target.value });
   };
+  // Add btn function
+  //   const Add_Product = async () => {
+  //     console.log(productDetails);
+  //     let responseData;
+  //     let product = productDetails;
 
-  // // Add btn function
+  //     // it will create an empty formdata
+  //     let formData = new FormData();
+  //     // append the selcted img in product
+  //     formData.append("product", image);
+
+  //     // send thid formdata to api
+  //     await fetch(`${API_URL}/upload`, {
+  //       method: "POST",
+  //       headers: {
+  //         Accept: "application/json",
+  //       },
+  //       body: formData,
+  //       // }).then((resp) => resp.json()).then((data)=>{responseData=data});
+  //     })
+  //       .then((resp) => resp.json())
+  //       .then((data) => {
+  //         responseData = data;
+  //       });
+
+  //     if (responseData.success) {
+  //       product.image = responseData.image_url;
+  //       console.log(product);
+  //       await fetch(`${API_URL}/addproduct`, {
+  //         method: "POST",
+  //         headers: {
+  //           Accept: "application/json",
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(product),
+  //       })
+  //         .then((resp) => resp.json())
+  //         .then((data) => {
+  //           data.success ? alert("Product Added") : alert("Failed");
+  //         });
+  //     }
+  //   };
+
   const Add_Product = async () => {
-    console.log(productDetails);
-    let responseData;
-    let product = productDetails;
+    if (!image) {
+      alert("Please select an image before submitting.");
+      return;
+    }
 
-    // it will create an empty formdata
+    setLoading(true); // ✅ start loading
+
     let formData = new FormData();
-    // append the selcted img in product
-    formData.append("product", image);
+    formData.append("file", image); // ⬅️ IMPORTANT: name must match backend field (e.g., "file")
 
-    // send thid formdata to api
-    await fetch(`${API_URL}/upload`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-      },
-      body: formData,
-      // }).then((resp) => resp.json()).then((data)=>{responseData=data});
-    })
-      .then((resp) => resp.json())
-      .then((data) => {
-        responseData = data;
+    try {
+      const uploadRes = await fetch(`${API_URL}/upload`, {
+        method: "POST",
+        body: formData,
       });
 
-    if (responseData.success) {
-      product.image = responseData.image_url;
-      console.log(product);
-      await fetch(`${API_URL}/addproduct`, {
+      const uploadData = await uploadRes.json();
+
+      if (!uploadData.success) {
+        alert("Image upload failed");
+        setLoading(false);
+        return;
+      }
+
+      // Set image URL from Cloudinary response
+      const product = {
+        ...productDetails,
+        image: uploadData.image_url,
+      };
+
+      const addProductRes = await fetch(`${API_URL}/addproduct`, {
         method: "POST",
         headers: {
-          Accept: "application/json",
           "Content-Type": "application/json",
         },
         body: JSON.stringify(product),
-      })
-        .then((resp) => resp.json())
-        .then((data) => {
-          data.success ? alert("Product Added") : alert("Failed");
+      });
+
+      const addProductData = await addProductRes.json();
+
+      if (addProductData.success) {
+        setLoading(false);
+        alert("✅ Product Added Successfully");
+        setProductDetails({
+          name: "",
+          image: "",
+          category: "women",
+          new_price: "",
+          old_price: "",
         });
+        setImage(false);
+      } else {
+        alert("❌ Product creation failed");
+      }
+    } catch (error) {
+      console.error("Error adding product:", error);
+      alert("An error occurred. Please check the console.");
+    } finally {
+      setLoading(false); // ✅ stop loading
     }
   };
 
@@ -122,7 +185,7 @@ const AddProduct = () => {
           <img
             src={image ? URL.createObjectURL(image) : upload_area}
             className="addproduct-thumnail-img"
-            alt="image"
+            alt="thumbnail"
           />
         </label>
         <input
@@ -138,8 +201,9 @@ const AddProduct = () => {
           Add_Product();
         }}
         className="addproduct-btn"
+        disabled={loading}
       >
-        ADD
+        {loading ? "Uploading..." : "ADD"}
       </button>
     </div>
   );
