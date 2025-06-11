@@ -1,4 +1,6 @@
 require("dotenv").config();
+const cloudinary = require("./cloudinary");
+const fs = require("fs");
 
 const port = process.env.PORT || 4001;
 // importing express
@@ -35,19 +37,52 @@ const storage = multer.diskStorage({
   },
 });
 
+const uploadDir = "./upload/images";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const upload = multer({ storage: storage });
 
 // Creating upload endpoint for images
-app.use("/images", express.static("upload/images"));
+// app.use("/images", express.static("upload/images"));
 
-app.post("/upload", upload.single("product"), (req, res) => {
-  res.json({
-    success: 1,
-    // image_url: `http://localhost:${port}/images/${req.file.filename}`,
-    image_url: `${req.protocol}://${req.get("host")}/images/${
-      req.file.filename
-    }`,
-  });
+// app.post("/upload", upload.single("product"), (req, res) => {
+//   res.json({
+//     success: 1,
+//     // image_url: `http://localhost:${port}/images/${req.file.filename}`,
+//     image_url: `${req.protocol}://${req.get("host")}/images/${
+//       req.file.filename
+//     }`,
+//   });
+// });
+
+//creating upload endpoint for images using cloudinary
+// This code will:
+// Upload the image to Cloudinary
+// Return the Cloudinary URL
+// Remove the temporary file from local storage
+app.post("/upload", upload.single("product"), async (req, res) => {
+  try {
+    const filePath = req.file.path;
+
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: "ecommerce_products",
+    });
+
+    // Delete the local file after uploading
+    fs.unlinkSync(filePath);
+
+    res.json({
+      success: 1,
+      image_url: result.secure_url,
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res
+      .status(500)
+      .json({ success: 0, message: "Upload to Cloudinary failed" });
+  }
 });
 
 //Schema for creating Products
@@ -194,7 +229,7 @@ app.post("/signup", async (req, res) => {
   };
 
   // create token
-  const token = jwt.sign(data, "secret_ecom");
+  const token = jwt.sign(data, process.env.JWT_SECRET);
   // token is not readable using secret
 
   res.json({ success: true, token });
@@ -214,7 +249,7 @@ app.post("/login", async (req, res) => {
           id: user.id,
         },
       };
-      const token = jwt.sign(data, "secret_ecom");
+      const token = jwt.sign(data, process.env.JWT_SECRET);
       res.json({ success: true, token });
     } else {
       res.json({ success: false, errors: "Wrong Password" });
@@ -256,7 +291,7 @@ const fetchUser = async (req, res, next) => {
     res.status(401).send({ errors: "Please authenticate using valid token" });
   } else {
     try {
-      const data = jwt.verify(token, "secret_ecom");
+      const data = jwt.verify(token, process.env.JWT_SECRET);
       req.user = data.user;
       next();
     } catch (error) {
