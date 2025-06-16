@@ -1,37 +1,40 @@
 import React, { useEffect, useState } from "react";
 import "./ListProduct.css";
-// import cross_icon from '../..assets/cross_icon.png';
 import cross_icon from "../../assets/cross_icon.png";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const ListProduct = () => {
   const [allproducts, setAllProducts] = useState([]);
+
   const fetchInfo = async () => {
-    await fetch(`${API_URL}/allproducts`)
-      .then((res) => res.json())
-      .then((data) => {
-        setAllProducts(data);
-      });
+    try {
+      const res = await fetch(`${API_URL}/allproducts`);
+      const data = await res.json();
+      setAllProducts(data);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    }
   };
-  // run this fuction whenever this component is mounted
+
   useEffect(() => {
     fetchInfo();
   }, []);
-  //  this function will call only once
 
-  // function to remove product
   const remove_product = async (id) => {
-    await fetch(`${API_URL}/removeproduct`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: id }),
-    });
-    // to update list after removing product
-    await fetchInfo();
+    try {
+      await fetch(`${API_URL}/removeproduct`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+      await fetchInfo(); // Refresh list after delete
+    } catch (error) {
+      console.error("Failed to remove product:", error);
+    }
   };
 
   return (
@@ -45,40 +48,33 @@ const ListProduct = () => {
         <p>Category</p>
         <p>Remove</p>
       </div>
+
       <div className="listproduct-allproduct">
-        {/* mapping product data which we fetch using api */}
         <hr />
-        {allproducts.map((product, index) => {
-          return (
-            <>
-              <div
-                key={index}
-                className="listproduct-format-main  listproduct-format"
-              >
-                <img
-                  src={product.image}
-                  alt="product"
-                  className="listproduct-product-icon"
-                />
-                <p>{product.name}</p>
-                <p>${product.old_price}</p>
-                <p>${product.new_price}</p>
-                <p>{product.category}</p>
-                <img
-                  onClick={() => {
-                    // remove_product(product.id);
-                    remove_product(product._id);
-                  }}
-                  className="listproduct-remove-icon"
-                  src={cross_icon}
-                  alt="Remove"
-                />
-              </div>
-              <hr />
-              {/* to insert line after each product we also insert empty tags */}
-            </>
-          );
-        })}
+        {allproducts.length === 0 && <p>No products available.</p>}
+        {allproducts.map((product) => (
+          <React.Fragment key={product._id}>
+            <div className="listproduct-format-main listproduct-format">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="listproduct-product-icon"
+              />
+              <p>{product.name}</p>
+              <p>${product.old_price}</p>
+              <p>${product.new_price}</p>
+              <p>{product.category}</p>
+              <img
+                onClick={() => remove_product(product._id)}
+                className="listproduct-remove-icon"
+                src={cross_icon}
+                alt="Remove"
+                style={{ cursor: "pointer" }}
+              />
+            </div>
+            <hr />
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );
