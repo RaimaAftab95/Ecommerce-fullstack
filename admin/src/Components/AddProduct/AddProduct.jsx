@@ -75,7 +75,7 @@ const AddProduct = () => {
     setLoading(true); // ✅ start loading
 
     let formData = new FormData();
-    formData.append("product", image); // ⬅️ IMPORTANT: name must match backend field (e.g., "file")
+    formData.append("image", image); // ⬅️ IMPORTANT: name must match backend field (e.g., "file")
 
     try {
       const uploadRes = await fetch(`${API_URL}/upload`, {
