@@ -38,7 +38,7 @@ async function uploadAndUpdateImages() {
     const products = await Product.find();
 
     for (const product of products) {
-      if (!product.image) continue;
+      if (!product.image || !product.image.includes("localhost")) continue;
 
       // Extract just the filename from the stored image path
       const fileName = path.basename(product.image);

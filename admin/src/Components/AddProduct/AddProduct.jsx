@@ -92,11 +92,23 @@ const AddProduct = () => {
       }
 
       // Set image URL from Cloudinary response
+      // const product = {
+      //   ...productDetails,
+      //   image: uploadData.image_url,
+      // };
+
+      // ✅ Step 2: Use Cloudinary image URL
       const product = {
-        ...productDetails,
-        image: uploadData.image_url,
+        name: productDetails.name,
+        category: productDetails.category,
+        old_price: productDetails.old_price,
+        new_price: productDetails.new_price,
+        image: uploadData.image_url, // ✅ Cloudinary URL
       };
 
+      console.log("Final product being sent:", product); // 👀 Check here
+
+      // Step 3: Send product to backend
       const addProductRes = await fetch(`${API_URL}/addproduct`, {
         method: "POST",
         headers: {

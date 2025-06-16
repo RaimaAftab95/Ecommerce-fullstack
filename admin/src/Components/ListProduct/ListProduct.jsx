@@ -66,7 +66,8 @@ const ListProduct = () => {
                 <p>{product.category}</p>
                 <img
                   onClick={() => {
-                    remove_product(product.id);
+                    // remove_product(product.id);
+                    remove_product(product._id);
                   }}
                   className="listproduct-remove-icon"
                   src={cross_icon}
