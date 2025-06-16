@@ -6,7 +6,6 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
 const cloudinary = require("./cloudinary");
-require("dotenv").config();
 
 // 1. Connect to MongoDB
 mongoose

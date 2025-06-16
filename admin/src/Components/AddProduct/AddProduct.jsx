@@ -72,43 +72,41 @@ const AddProduct = () => {
       return;
     }
 
-    setLoading(true); // ✅ start loading
-
-    let formData = new FormData();
-    formData.append("image", image); // ⬅️ IMPORTANT: name must match backend field (e.g., "file")
+    setLoading(true);
 
     try {
-      const uploadRes = await fetch(`${API_URL}/upload`, {
-        method: "POST",
-        body: formData,
-      });
+      // Step 1: Upload image to Cloudinary directly
+      const formData = new FormData();
+      formData.append("file", image);
+      formData.append("upload_preset", "ecommerce"); // ⬅️ change this
+      formData.append("cloud_name", "duwxrjwql"); // ⬅️ change this
 
-      const uploadData = await uploadRes.json();
+      const cloudRes = await fetch(
+        "https://api.cloudinary.com/v1_1/duwxrjwql/image/upload", // ⬅️ change this
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-      if (!uploadData.success) {
-        alert("Image upload failed");
+      const cloudData = await cloudRes.json();
+
+      if (!cloudData.secure_url) {
+        alert("❌ Cloudinary upload failed");
         setLoading(false);
         return;
       }
 
-      // Set image URL from Cloudinary response
-      // const product = {
-      //   ...productDetails,
-      //   image: uploadData.image_url,
-      // };
-
-      // ✅ Step 2: Use Cloudinary image URL
+      // Step 2: Prepare product object with Cloudinary image URL
       const product = {
         name: productDetails.name,
         category: productDetails.category,
         old_price: productDetails.old_price,
         new_price: productDetails.new_price,
-        image: uploadData.image_url, // ✅ Cloudinary URL
+        image: cloudData.secure_url,
       };
 
-      console.log("Final product being sent:", product); // 👀 Check here
-
-      // Step 3: Send product to backend
+      // Step 3: Send product to your backend
       const addProductRes = await fetch(`${API_URL}/addproduct`, {
         method: "POST",
         headers: {
@@ -120,7 +118,6 @@ const AddProduct = () => {
       const addProductData = await addProductRes.json();
 
       if (addProductData.success) {
-        setLoading(false);
         alert("✅ Product Added Successfully");
         setProductDetails({
           name: "",
@@ -137,7 +134,7 @@ const AddProduct = () => {
       console.error("Error adding product:", error);
       alert("An error occurred. Please check the console.");
     } finally {
-      setLoading(false); // ✅ stop loading
+      setLoading(false);
     }
   };
 
