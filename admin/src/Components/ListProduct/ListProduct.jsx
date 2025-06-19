@@ -32,6 +32,7 @@ const ListProduct = () => {
         body: JSON.stringify({ id }),
       });
       await fetchInfo(); // Refresh list after delete
+      alert(`Product with ID: ${id} is deleted`);
     } catch (error) {
       console.error("Failed to remove product:", error);
     }
